@@ -16,5 +16,5 @@ func main() {
 
 	// fmt.Println(day1.Solution(input))
 
-	utils.BenchmarkAverage(input, day3.Part1, 1)
+	utils.BenchmarkAverage(input, day3.Part2, 1)
 }

@@ -29,6 +29,7 @@ func (s schematic) validIndex(row, column int) bool {
 
 	return true
 }
+
 func (s schematic) checkForSymbol(row, column int) bool {
 	if s.validIndex(row+1, column) && s.engine[row+1][column] != '.' && !unicode.IsDigit(rune(s.engine[row+1][column])) {
 		return true
@@ -65,8 +66,49 @@ func (s schematic) checkForSymbol(row, column int) bool {
 	return false
 }
 
+func (s schematic) checkForAdjacentNumber(row, column int) int {
+	total := 0
+	if s.validIndex(row+1, column) && unicode.IsDigit(rune(s.engine[row+1][column])) {
+		total += 1
+	}
+
+	if s.validIndex(row-1, column) && unicode.IsDigit(rune(s.engine[row-1][column])) {
+		total += 1
+	}
+
+	if s.validIndex(row, column+1) && unicode.IsDigit(rune(s.engine[row][column+1])) {
+		total += 1
+	}
+
+	if s.validIndex(row, column-1) && unicode.IsDigit(rune(s.engine[row][column-1])) {
+		total += 1
+	}
+
+	if s.validIndex(row+1, column+1) && unicode.IsDigit(rune(s.engine[row+1][column+1])) {
+		total += 1
+	}
+
+	if s.validIndex(row-1, column-1) && unicode.IsDigit(rune(s.engine[row-1][column-1])) {
+		total += 1
+	}
+
+	if s.validIndex(row+1, column-1) && unicode.IsDigit(rune(s.engine[row+1][column-1])) {
+		total += 1
+	}
+
+	if s.validIndex(row-1, column+1) && unicode.IsDigit(rune(s.engine[row-1][column+1])) {
+		total += 1
+	}
+
+	return total
+}
+
 func (s schematic) checkForDigit(row, column int) bool {
 	return unicode.IsDigit(rune(s.engine[row][column]))
+}
+
+func (s schematic) checkForGear(row, column int) bool {
+	return s.engine[row][column] == '*'
 }
 
 func Part1(input []string) int {
@@ -103,6 +145,22 @@ func Part1(input []string) int {
 				fmt.Println("Failed to convert!!")
 			}
 			total += val
+		}
+	}
+
+	return total
+}
+
+func Part2(input []string) int {
+	schem := schematic{
+		engine: input,
+	}
+	total := 0
+	for x, row := range input {
+		for y, _ := range row {
+			if schem.checkForGear(x, y) && schem.checkForAdjacentNumber(x, y) > 1 {
+				fmt.Println(x, y)
+			}
 		}
 	}
 
