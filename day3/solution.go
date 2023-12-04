@@ -84,12 +84,25 @@ func Part1(input []string) int {
 					valid = schem.checkForSymbol(x, y)
 				}
 			} else {
-				fmt.Println(number)
-				val, _ := strconv.Atoi(number)
-				total += val
+				if valid {
+					// fmt.Println(number)
+					val, err := strconv.Atoi(number)
+					if err != nil {
+						fmt.Println("Failed to convert!!")
+					}
+					total += val
+				}
 				number = ""
 				valid = false
 			}
+		}
+
+		if valid {
+			val, err := strconv.Atoi(number)
+			if err != nil {
+				fmt.Println("Failed to convert!!")
+			}
+			total += val
 		}
 	}
 
