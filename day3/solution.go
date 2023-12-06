@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"strconv"
 	"unicode"
+
+	"github.com/FrankMoreno/adventcode_2023/collections"
 )
+
+var directions = [][]int{{1, 0}, {0, 1}, {1, 1}, {-1, -1}, {1, -1}, {-1, 1}, {-1, 0}, {0, -1}}
 
 type schematic struct {
 	engine []string
@@ -31,73 +35,21 @@ func (s schematic) validIndex(row, column int) bool {
 }
 
 func (s schematic) checkForSymbol(row, column int) bool {
-	if s.validIndex(row+1, column) && s.engine[row+1][column] != '.' && !unicode.IsDigit(rune(s.engine[row+1][column])) {
-		return true
-	}
-
-	if s.validIndex(row-1, column) && s.engine[row-1][column] != '.' && !unicode.IsDigit(rune(s.engine[row-1][column])) {
-		return true
-	}
-
-	if s.validIndex(row, column+1) && s.engine[row][column+1] != '.' && !unicode.IsDigit(rune(s.engine[row][column+1])) {
-		return true
-	}
-
-	if s.validIndex(row, column-1) && s.engine[row][column-1] != '.' && !unicode.IsDigit(rune(s.engine[row][column-1])) {
-		return true
-	}
-
-	if s.validIndex(row+1, column+1) && s.engine[row+1][column+1] != '.' && !unicode.IsDigit(rune(s.engine[row+1][column+1])) {
-		return true
-	}
-
-	if s.validIndex(row-1, column-1) && s.engine[row-1][column-1] != '.' && !unicode.IsDigit(rune(s.engine[row-1][column-1])) {
-		return true
-	}
-
-	if s.validIndex(row+1, column-1) && s.engine[row+1][column-1] != '.' && !unicode.IsDigit(rune(s.engine[row+1][column-1])) {
-		return true
-	}
-
-	if s.validIndex(row-1, column+1) && s.engine[row-1][column+1] != '.' && !unicode.IsDigit(rune(s.engine[row-1][column+1])) {
-		return true
+	for _, direction := range directions {
+		if s.validIndex(row+direction[0], column+direction[1]) && s.engine[row+direction[0]][column+direction[1]] != '.' && !unicode.IsDigit(rune(s.engine[row+direction[0]][column+direction[1]])) {
+			return true
+		}
 	}
 
 	return false
 }
 
-func (s schematic) checkForAdjacentNumber(row, column int) int {
-	total := 0
-	if s.validIndex(row+1, column) && unicode.IsDigit(rune(s.engine[row+1][column])) {
-		total += 1
-	}
-
-	if s.validIndex(row-1, column) && unicode.IsDigit(rune(s.engine[row-1][column])) {
-		total += 1
-	}
-
-	if s.validIndex(row, column+1) && unicode.IsDigit(rune(s.engine[row][column+1])) {
-		total += 1
-	}
-
-	if s.validIndex(row, column-1) && unicode.IsDigit(rune(s.engine[row][column-1])) {
-		total += 1
-	}
-
-	if s.validIndex(row+1, column+1) && unicode.IsDigit(rune(s.engine[row+1][column+1])) {
-		total += 1
-	}
-
-	if s.validIndex(row-1, column-1) && unicode.IsDigit(rune(s.engine[row-1][column-1])) {
-		total += 1
-	}
-
-	if s.validIndex(row+1, column-1) && unicode.IsDigit(rune(s.engine[row+1][column-1])) {
-		total += 1
-	}
-
-	if s.validIndex(row-1, column+1) && unicode.IsDigit(rune(s.engine[row-1][column+1])) {
-		total += 1
+func (s schematic) checkForAdjacentNumber(row, column int) [][]int {
+	total := [][]int{}
+	for _, direction := range directions {
+		if s.validIndex(row+direction[0], column+direction[1]) && s.checkForDigit(row+direction[0], column+direction[1]) {
+			total = append(total, []int{row + direction[0], column + direction[1]})
+		}
 	}
 
 	return total
@@ -109,6 +61,20 @@ func (s schematic) checkForDigit(row, column int) bool {
 
 func (s schematic) checkForGear(row, column int) bool {
 	return s.engine[row][column] == '*'
+}
+
+func (s schematic) getFullDigit(row, column int) int {
+	full := ""
+	for i := column; s.validIndex(row, i) && s.checkForDigit(row, i); i -= 1 {
+		full = string(s.engine[row][i]) + full
+	}
+
+	for i := column + 1; s.validIndex(row, i) && s.checkForDigit(row, i); i += 1 {
+		full = full + string(s.engine[row][i])
+	}
+
+	val, _ := strconv.Atoi(full)
+	return val
 }
 
 func Part1(input []string) int {
@@ -158,8 +124,22 @@ func Part2(input []string) int {
 	total := 0
 	for x, row := range input {
 		for y, _ := range row {
-			if schem.checkForGear(x, y) && schem.checkForAdjacentNumber(x, y) > 1 {
-				fmt.Println(x, y)
+			if schem.checkForGear(x, y) {
+				localTotal := 1
+				adjacentNums := schem.checkForAdjacentNumber(x, y)
+				unique := collections.NewSet[int]()
+
+				for _, adjacantNum := range adjacentNums {
+					fullFigit := schem.getFullDigit(adjacantNum[0], adjacantNum[1])
+					if !unique.Contains(fullFigit) {
+						unique.Add(fullFigit)
+						localTotal *= fullFigit
+					}
+				}
+
+				if unique.Len() > 1 {
+					total += localTotal
+				}
 			}
 		}
 	}
